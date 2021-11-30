@@ -1,15 +1,15 @@
 #include<netinet/in.h>
 #include<errno.h>
 #include<netdb.h>
-#include<stdio.h>   //For standard things
-#include<stdlib.h>  //malloc
-#include<string.h>  //strlen
-#include<netinet/ip_icmp.h>  //Provides declarations for icmp header
-#include<netinet/udp.h>	     //Provides declarations for udp header
-#include<netinet/tcp.h>	     //Provides declarations for tcp header
-#include<netinet/ip.h>	     //Provides declarations for ip header
+#include<stdio.h>   
+#include<stdlib.h>  
+#include<string.h>  
+#include<netinet/ip_icmp.h>  //For ICMP header
+#include<netinet/udp.h>	     //For UDP header
+#include<netinet/tcp.h>	     //For TCP header
+#include<netinet/ip.h>	     //For IP header
 #include<netinet/if_ether.h> //For ETH_P_ALL
-#include<net/ethernet.h>     //For ether_header
+#include<net/ethernet.h>     //For Ether header
 #include<sys/socket.h>
 #include<arpa/inet.h>
 #include<sys/ioctl.h>
@@ -17,13 +17,12 @@
 #include<sys/types.h>
 #include<unistd.h>
 
-void ProcessPacket(unsigned char* , int);//To obtain the IP header
+void ProcessPacket(unsigned char* , int);//To obtain the IP header to detect what protocol is being used
 void print_device_info(unsigned char* , int); //To print MAC Address and device type
 struct sockaddr_in source,dest;
 
-void ProcessPacket(unsigned char* buffer, int size)
+void ProcessPacket(unsigned char* buffer, int size)	//To obtain the IP header to detect what protocol is being used
 {
-	//Get the IP Header part of this packet , excluding the ethernet header
 	struct iphdr *iph = (struct iphdr*)(buffer + sizeof(struct ethhdr));
 	switch (iph->protocol) //Check the Protocol and do accordingly...
 	{
@@ -82,7 +81,7 @@ int getType(int a, int b, int c)	//To get the type of device for the correspondi
         return (rand()%2);
 }
 
-void print_device_info(unsigned char* Buffer, int Size)
+void print_device_info(unsigned char* Buffer, int Size)		//To print MAC Address and device type
 {
     struct ethhdr *eth = (struct ethhdr *)Buffer;
     int typeDest = getType(eth->h_dest[0], eth->h_dest[1], eth->h_dest[2]);
@@ -90,8 +89,10 @@ void print_device_info(unsigned char* Buffer, int Size)
 
     printf("\n******************************************************************\n\n");
 
-    //Destination
+    //Destination Mac Address
     printf("Destination Mac Address\t: %.2X-%.2X-%.2X-%.2X-%.2X-%.2X \n", eth->h_dest[0] , eth->h_dest[1] , eth->h_dest[2] , eth->h_dest[3] , eth->h_dest[4] , eth->h_dest[5] );
+    
+    //Destination Device Type
     if(typeDest == 1)
 	printf("Destination Device is\t: %s\n", "Mobile");
     else
@@ -99,8 +100,10 @@ void print_device_info(unsigned char* Buffer, int Size)
 
     printf("\n");
 
-    //Source
+    //Source Mac Address
     printf("Source Mac Address\t: %.2X-%.2X-%.2X-%.2X-%.2X-%.2X \n", eth->h_source[0] , eth->h_source[1] , eth->h_source[2] , eth->h_source[3] , eth->h_source[4] , eth->h_source[5] );
+    
+    // Source Device Type
     if(typeSrc == 1)
 	printf("Source Device is\t: %s\n", "Mobile");
     else
@@ -112,14 +115,13 @@ int main()
 {
     int saddr_size , data_size;
     struct sockaddr saddr;
-
-    unsigned char *buffer = (unsigned char *) malloc(65536); //Its Big!
+    unsigned char *buffer = (unsigned char *) malloc(65536);
 
     printf("Starting...\n");
     int sock_raw = socket( AF_PACKET , SOCK_RAW , htons(ETH_P_ALL)) ;
-    if(sock_raw < 0)
+    //Detect Error while connecting to Raw Socket
+    if(sock_raw < 0) 
     {
-	//Print the error with proper message
 	perror("Socket Error");
 	return 1;
     }
@@ -127,14 +129,18 @@ int main()
     while(1)
     {
 	saddr_size = sizeof saddr;
-	//Receive a packet
+	    
+	//Receive the packet
 	data_size = recvfrom(sock_raw , buffer , 65536 , 0 , &saddr , (socklen_t*)&saddr_size);
+	
+	//Detect Error while Recieving packet
 	if(data_size <0 )
 	{
 	    printf("Recvfrom error , failed to get packets\n");
 	    return 1;
 	}
-	//Now process the packet
+	    
+	//Now we can process the packet
 	ProcessPacket(buffer , data_size);
     }
     close(sock_raw);
