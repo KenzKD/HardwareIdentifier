@@ -37,7 +37,7 @@ void ProcessPacket(unsigned char* buffer, int size)
 			break;
 	}
 }
-int getType(int a, int b, int c)
+int getType(int a, int b, int c)	//To get the type of device for the corresponding MAC Address
 {
     char mac[7];
     snprintf(mac, sizeof(mac), "%.2X%.2X%.2X", a, b, c);
