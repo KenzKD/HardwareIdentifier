@@ -84,60 +84,60 @@ int getType(int a, int b, int c)
 
 void print_device_info(unsigned char* Buffer, int Size)
 {
-	struct ethhdr *eth = (struct ethhdr *)Buffer;
+    struct ethhdr *eth = (struct ethhdr *)Buffer;
     int typeDest = getType(eth->h_dest[0], eth->h_dest[1], eth->h_dest[2]);
-	int typeSrc = getType(eth->h_source[0] , eth->h_source[1] , eth->h_source[2]);
+    int typeSrc = getType(eth->h_source[0] , eth->h_source[1] , eth->h_source[2]);
 
-	printf("\n******************************************************************\n\n");
+    printf("\n******************************************************************\n\n");
 
     //Destination
-	printf("Destination Mac Address\t: %.2X-%.2X-%.2X-%.2X-%.2X-%.2X \n", eth->h_dest[0] , eth->h_dest[1] , eth->h_dest[2] , eth->h_dest[3] , eth->h_dest[4] , eth->h_dest[5] );
-	if(typeDest == 1)
-		printf("Destination Device is\t: %s\n", "Mobile");
-	else
-		printf("Destination Device is\t: %s\n", "Desktop");
+    printf("Destination Mac Address\t: %.2X-%.2X-%.2X-%.2X-%.2X-%.2X \n", eth->h_dest[0] , eth->h_dest[1] , eth->h_dest[2] , eth->h_dest[3] , eth->h_dest[4] , eth->h_dest[5] );
+    if(typeDest == 1)
+	printf("Destination Device is\t: %s\n", "Mobile");
+    else
+	printf("Destination Device is\t: %s\n", "Desktop");
 
     printf("\n");
 
     //Source
     printf("Source Mac Address\t: %.2X-%.2X-%.2X-%.2X-%.2X-%.2X \n", eth->h_source[0] , eth->h_source[1] , eth->h_source[2] , eth->h_source[3] , eth->h_source[4] , eth->h_source[5] );
-	if(typeSrc == 1)
-		printf("Source Device is\t: %s\n", "Mobile");
-	else
-		printf("Source Device is\t: %s\n", "Desktop");
+    if(typeSrc == 1)
+	printf("Source Device is\t: %s\n", "Mobile");
+    else
+	printf("Source Device is\t: %s\n", "Desktop");
 }
 
 
 int main()
 {
-	int saddr_size , data_size;
-	struct sockaddr saddr;
+    int saddr_size , data_size;
+    struct sockaddr saddr;
 
-	unsigned char *buffer = (unsigned char *) malloc(65536); //Its Big!
+    unsigned char *buffer = (unsigned char *) malloc(65536); //Its Big!
 
     printf("Starting...\n");
-	int sock_raw = socket( AF_PACKET , SOCK_RAW , htons(ETH_P_ALL)) ;
-	if(sock_raw < 0)
-	{
-		//Print the error with proper message
-		perror("Socket Error");
-		return 1;
-	}
+    int sock_raw = socket( AF_PACKET , SOCK_RAW , htons(ETH_P_ALL)) ;
+    if(sock_raw < 0)
+    {
+	//Print the error with proper message
+	perror("Socket Error");
+	return 1;
+    }
 
-	while(1)
+    while(1)
+    {
+	saddr_size = sizeof saddr;
+	//Receive a packet
+	data_size = recvfrom(sock_raw , buffer , 65536 , 0 , &saddr , (socklen_t*)&saddr_size);
+	if(data_size <0 )
 	{
-		saddr_size = sizeof saddr;
-		//Receive a packet
-		data_size = recvfrom(sock_raw , buffer , 65536 , 0 , &saddr , (socklen_t*)&saddr_size);
-		if(data_size <0 )
-		{
-			printf("Recvfrom error , failed to get packets\n");
-			return 1;
-		}
-		//Now process the packet
-		ProcessPacket(buffer , data_size);
+	    printf("Recvfrom error , failed to get packets\n");
+	    return 1;
 	}
-	close(sock_raw);
-	printf("Finished");
-	return 0;
+	//Now process the packet
+	ProcessPacket(buffer , data_size);
+    }
+    close(sock_raw);
+    printf("Finished");
+    return 0;
 }
